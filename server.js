@@ -1,7 +1,11 @@
 const express = require("express");
 
 const cors = require("cors");
+
 const Router = require("./Routes/DataRoutes");
+
+const userRouter = require("./Routes/userRoutes");
+
 const mongoConnection = require("./mongoConnection");
 
 const dotenv = require("dotenv").config();
@@ -25,6 +29,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/validation", Router);
+app.use("/user", userRouter);
 
 app.all("*", (req, res) => {
   res.send("NOT FOUND");
