@@ -1,6 +1,6 @@
 const express = require("express");
 
-const userSchema = require("../Models/userSchema");
+const userSchema = require("../Models/UserSchema");
 
 const bcrypt = require("bcrypt");
 
