@@ -39,8 +39,19 @@ Router.get("/", async (req, res) => {
       res.status(500).send({ error: "Internal error" });
     }
   })
-  .put("/", (req, res) => {
+  .put("/", async (req, res) => {
     res.send("Put Api");
+  })
+  .put("/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const UpdateStatus = await sheet1Schema.updateOne({ _id: id }, req.body);
+
+      res.status(200).send(UpdateStatus);
+    } catch (error) {
+      res.status(500).send({ error: "Internal Error" });
+    }
   })
   .get("/filter", async (req, res) => {
     res.send("Filter");

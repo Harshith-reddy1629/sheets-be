@@ -27,8 +27,8 @@ const AIsheetSchema = mongoose.Schema(
       required: [true, "Required"],
     },
     status: {
-      type: Boolean,
-      default: false,
+      type: String,
+      default: "Todo",
     },
 
     date: {
