@@ -8,6 +8,19 @@ const jwt = require("jsonwebtoken");
 
 const Router = express.Router();
 
+const checkMail = async (req, res, next) => {
+  const { username, email, password, isAdmin = true } = req.body;
+
+  const reqExpression1 = /.+@purecodemarketpalce\.io$/;
+  const reqExpression2 = /.+ @purecodesoftware\.com$/;
+
+  if (reqExpression1.test(email) || reqExpression2.test(email)) {
+    next();
+  } else {
+    res.status(400).send({ error: "Use mail that associated with purecode" });
+  }
+};
+
 Router.post("/", async (req, res) => {
   const { username, password } = req.body;
 
@@ -16,7 +29,7 @@ Router.post("/", async (req, res) => {
     if (!usercheck) {
       res.status(401).send({ error: "Invalid user" });
     } else {
-      const { username, isAdmin, email } = usercheck;
+      const { username, isAdmin, email, _id } = usercheck;
       //   console.log(usercheck);
 
       const isPasswordMatched = await bcrypt.compare(
@@ -25,7 +38,8 @@ Router.post("/", async (req, res) => {
       );
       //   console.log(isPasswordMatched);
       if (isPasswordMatched) {
-        const payload = { username, isAdmin, email };
+        const payload = { username, isAdmin, email, _id };
+        console.log(_id);
         const jwtToken = jwt.sign(payload, process.env.MY_SECRET_TOKEN);
 
         res.status(200).send({ jwtToken });
@@ -36,7 +50,7 @@ Router.post("/", async (req, res) => {
   } catch (error) {
     res.status(500).send({ error: "Internal Error" });
   }
-}).post("/register", async (req, res) => {
+}).post("/register", checkMail, async (req, res) => {
   const { username, email, password, isAdmin = true } = req.body;
 
   try {

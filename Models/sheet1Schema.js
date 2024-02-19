@@ -32,7 +32,7 @@ const AIsheetSchema = mongoose.Schema(
     },
 
     date: {
-      type: Date,
+      type: String,
       default: Date.now,
     },
   },
