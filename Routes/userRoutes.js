@@ -8,10 +8,54 @@ const jwt = require("jsonwebtoken");
 
 const Router = express.Router();
 
+const nodemailer = require("nodemailer");
+
+const inputValidation = (request, response, next) => {
+  const { username, password, email } = request.body;
+
+  if (!username || !password || !email) {
+    response.status(400).send({ errMsg: "All Fields are mandatory" });
+  } else {
+    next();
+  }
+};
+const generateEmail = async (request, response) => {
+  try {
+    const { email, name, username } = request.body;
+
+    const getId = await userSchema.findOne({ email });
+
+    const transporter = nodemailer.createTransport({
+      host: "SMTPConnection.gmail.com",
+      service: "gmail",
+      auth: {
+        user: process.env.MY_EMAIL,
+        pass: process.env.MY_PASS,
+      },
+    });
+
+    if (!getId) {
+      response.status(404).send({ error: "invalid" });
+    } else {
+      const { _id, username } = getId;
+
+      await transporter.sendMail({
+        from: process.env.MY_EMAIL,
+        to: email,
+        subject: "Verify email",
+        text: `Hi ${username},\nWe just need to verify your email address before you can access Purecode Validation.\nVerify your email address https://money-matters-frontend.vercel.app/verify/mail/${_id}`,
+      });
+    }
+
+    response.status(201).send({ msg: "email sent," });
+  } catch (error) {
+    response.status(500).send({ error: "Intenal Error" });
+  }
+};
 const checkMail = async (req, res, next) => {
   const { username, email, password, isAdmin = true } = req.body;
 
-  const reqExpression1 = /.+@purecodemarketpalce\.io$/;
+  const reqExpression1 = /.+@purecodemarketplace\.io$/;
   const reqExpression2 = /.+ @purecodesoftware\.com$/;
 
   if (reqExpression1.test(email) || reqExpression2.test(email)) {
@@ -44,36 +88,51 @@ Router.post("/", async (req, res) => {
 
         res.status(200).send({ jwtToken });
       } else {
-        res.status(400).send({ error: "Invalid user" });
+        res.status(400).send({ error: "Invalid password" });
       }
     }
   } catch (error) {
     res.status(500).send({ error: "Internal Error" });
   }
 })
-  .post("/register", checkMail, async (req, res) => {
-    const { username, email, password, isAdmin = true } = req.body;
+  .post(
+    "/register",
+    inputValidation,
+    checkMail,
+    async (req, res, next) => {
+      const { username, email, password } = req.body;
+      const reqExpression2 = /.+ @purecodesoftware\.com$/;
+      const isAdmin = reqExpression2.test(email);
+      try {
+        const usercheck = await userSchema.findOne({ username });
+        const emailcheck = await userSchema.findOne({ email });
 
-    try {
-      const usercheck = await userSchema.findOne({ username });
-
-      if (!usercheck) {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        //   console.log(username);
-        const InsertUser = await userSchema.create({
-          username,
-          email,
-          password: hashedPassword,
-          isAdmin,
-        });
-        res.status(201).send(InsertUser);
-      } else {
-        res.status(400).send({ error: "User already exists" });
+        if (!usercheck && !emailcheck) {
+          const hashedPassword = await bcrypt.hash(password, 10);
+          //   console.log(username);
+          const InsertUser = await userSchema.create({
+            username,
+            email,
+            password: hashedPassword,
+            isAdmin,
+          });
+          next();
+        } else {
+          const errors = {};
+          if (!!usercheck) {
+            errors.usererror = "User already exists";
+          }
+          if (!!emailcheck) {
+            errors.emailError = "Email already exists";
+          }
+          res.status(400).send(errors);
+        }
+      } catch (error) {
+        res.status(500).send({ error: "Internal Error" });
       }
-    } catch (error) {
-      res.status(500).send({ error: "Internal Error" });
-    }
-  })
+    },
+    generateEmail
+  )
   .get("/", async (req, res) => res.status(200).send("GET "));
 
 module.exports = Router;
