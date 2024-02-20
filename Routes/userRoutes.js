@@ -43,7 +43,7 @@ const generateEmail = async (request, response) => {
         from: process.env.MY_EMAIL,
         to: email,
         subject: "Verify email",
-        text: `Hi ${username},\nWe just need to verify your email address before you can access Purecode Validation.\nVerify your email address https://money-matters-frontend.vercel.app/verify/mail/${_id}`,
+        text: `Hi ${username},\nWe just need to verify your email address before you can access Purecode Validation.\nVerify your email address https://sheets-njt7.onrender.com/user/verify/${_id}`,
       });
     }
 
@@ -73,7 +73,7 @@ Router.post("/", async (req, res) => {
     if (!usercheck) {
       res.status(401).send({ error: "Invalid user" });
     } else {
-      const { username, isAdmin, email, _id } = usercheck;
+      const { username, isAdmin, email, _id, isVerified } = usercheck;
       //   console.log(usercheck);
 
       const isPasswordMatched = await bcrypt.compare(
@@ -82,11 +82,15 @@ Router.post("/", async (req, res) => {
       );
       //   console.log(isPasswordMatched);
       if (isPasswordMatched) {
-        const payload = { username, isAdmin, email, _id };
-        console.log(_id);
-        const jwtToken = jwt.sign(payload, process.env.MY_SECRET_TOKEN);
+        if (isVerified) {
+          const payload = { username, isAdmin, email, _id };
+          console.log(_id);
+          const jwtToken = jwt.sign(payload, process.env.MY_SECRET_TOKEN);
 
-        res.status(200).send({ jwtToken });
+          res.status(200).send({ jwtToken });
+        } else {
+          res.status(403).send({ error: "Please verify your email" });
+        }
       } else {
         res.status(400).send({ error: "Invalid password" });
       }
@@ -136,3 +140,32 @@ Router.post("/", async (req, res) => {
   .get("/", async (req, res) => res.status(200).send("GET "));
 
 module.exports = Router;
+
+const emailVerification = async (request, response) => {
+  const { id } = request.params;
+
+  try {
+    const UserwithId = await userSchema.findOne({ _id: id });
+
+    if (!UserwithId) {
+      response.status(404).send({ errMsg: "Invalid Url" });
+    } else {
+      const { isVerified } = UserwithId;
+
+      if (isVerified) {
+        response.status(400).send({ errMsg: "Email already verified" });
+      } else {
+        const verifyUser = await userSchema.updateOne(
+          { _id: id },
+          { isVerified: true }
+        );
+
+        response.status(200).send(verifyUser);
+      }
+    }
+  } catch (error) {
+    response.status(500).send("failed");
+  }
+};
+
+Router.get("/verify/:id", emailVerification);
