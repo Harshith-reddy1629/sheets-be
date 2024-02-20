@@ -50,28 +50,30 @@ Router.post("/", async (req, res) => {
   } catch (error) {
     res.status(500).send({ error: "Internal Error" });
   }
-}).post("/register", checkMail, async (req, res) => {
-  const { username, email, password, isAdmin = true } = req.body;
+})
+  .post("/register", checkMail, async (req, res) => {
+    const { username, email, password, isAdmin = true } = req.body;
 
-  try {
-    const usercheck = await userSchema.findOne({ username });
+    try {
+      const usercheck = await userSchema.findOne({ username });
 
-    if (!usercheck) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      //   console.log(username);
-      const InsertUser = await userSchema.create({
-        username,
-        email,
-        password: hashedPassword,
-        isAdmin,
-      });
-      res.status(201).send(InsertUser);
-    } else {
-      res.status(400).send({ error: "User already exists" });
+      if (!usercheck) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        //   console.log(username);
+        const InsertUser = await userSchema.create({
+          username,
+          email,
+          password: hashedPassword,
+          isAdmin,
+        });
+        res.status(201).send(InsertUser);
+      } else {
+        res.status(400).send({ error: "User already exists" });
+      }
+    } catch (error) {
+      res.status(500).send({ error: "Internal Error" });
     }
-  } catch (error) {
-    res.status(500).send({ error: "Internal Error" });
-  }
-});
+  })
+  .get("/", async (req, res) => res.status(200).send("GET "));
 
 module.exports = Router;
