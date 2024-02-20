@@ -21,7 +21,7 @@ const inputValidation = (request, response, next) => {
 };
 const generateEmail = async (request, response) => {
   try {
-    const { email, name, username } = request.body;
+    const { email, username } = request.body;
 
     const getId = await userSchema.findOne({ email });
 
@@ -137,9 +137,7 @@ Router.post("/", async (req, res) => {
     },
     generateEmail
   )
-  .get("/", async (req, res) => res.status(200).send("GET "));
-
-module.exports = Router;
+  .get("/:id", async (req, res) => res.status(200).send("GET "));
 
 const emailVerification = async (request, response) => {
   const { id } = request.params;
@@ -169,3 +167,5 @@ const emailVerification = async (request, response) => {
 };
 
 Router.get("/verify/:id", emailVerification);
+
+module.exports = Router;
