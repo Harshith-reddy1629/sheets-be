@@ -53,22 +53,9 @@ exports.PostData = async (req, res) => {
         });
         res.status(201).send(PostData);
       } else {
-        if (isAdmin) {
-          const updateByAD = await sheet1Schema.updateOne(
-            {
-              name: username,
-              packName: packname,
-              date: D,
-            },
-            req.body
-          );
-
-          res.status(200).send(updateByAD);
-        } else {
-          res.status(400).send({
-            error: "cannot create data on same date with same component",
-          });
-        }
+        res.status(400).send({
+          error: "cannot create data on same date with same component",
+        });
       }
     }
 
