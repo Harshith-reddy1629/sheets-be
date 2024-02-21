@@ -6,10 +6,19 @@ exports.getData = async (req, res) => {
     const { isAdmin, username } = req.user;
     if (isAdmin) {
       const getData = await sheet1Schema.find();
-      res.status(200).send(getData);
+      const sortedData = getData.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+
+      res.status(200).send(sortedData);
     } else {
       const getData = await sheet1Schema.find({ name: username });
-      res.status(200).send(getData);
+
+      const sortedData = getData.sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+      );
+
+      res.status(200).send(sortedData);
     }
   } catch (error) {
     res.status(500).send({ error: "Internal error" });
