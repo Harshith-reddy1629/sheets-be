@@ -8,7 +8,6 @@ const userRouter = require("./Routes/userRoutes");
 
 const mongoConnection = require("./mongoConnection");
 const create_template = require("./Controllers/template_controllers");
-const { Await } = require("react-router-dom");
 const create_user_template_data = require("./Controllers/user_template_controllers");
 const create_day_wise = require("./Controllers/day_wise");
 
