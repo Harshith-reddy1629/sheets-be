@@ -61,6 +61,7 @@ exports.create_day_wise = async (req, res) => {
   try {
     const { name, template_name, completed_today } = req.body;
     const { is_valid_user } = req;
+    const { isAdmin } = req.user;
 
     // Find or create user template
     let is_template_user = await user_template_schema
@@ -81,9 +82,11 @@ exports.create_day_wise = async (req, res) => {
           session,
         })
       )[0];
+
+    // Update user template
     // console.log(is_template);
     // Create day wise data
-    const created_data = await day_wise_schema.create(
+    const created_data_array = await day_wise_schema.create(
       [
         {
           user_name: is_valid_user.username,
@@ -94,13 +97,6 @@ exports.create_day_wise = async (req, res) => {
         },
       ],
       { session }
-    );
-
-    // Update user template
-    await user_template_schema.findOneAndUpdate(
-      { user_id: is_valid_user._id },
-      { $inc: { No_of_screens_completed: completed_today } },
-      { new: true, session }
     );
 
     // Update template users
@@ -132,16 +128,31 @@ exports.create_day_wise = async (req, res) => {
     );
 
     // Update template data
-    await templates_schema.findOneAndUpdate(
+    const template_data = await templates_schema.findOneAndUpdate(
       { _id: is_template._id },
       { $inc: { No_of_screens_completed: completed_today } },
       { new: true, session }
     );
+    const user_data = await user_template_schema.findOneAndUpdate(
+      { user_id: is_valid_user._id },
+      { $inc: { No_of_screens_completed: completed_today } },
+      { new: true, session }
+    );
+    // const created_data = created_data_array[0];
+    // console.log(created_data_array[0]);
+
+    const DoneScreens = isAdmin
+      ? await templates_schema.countDocuments({ status: "Done" })
+      : await templates_schema.countDocuments({ user_id: _id, status: "Done" });
+
+    // let d = created_data[0];
 
     await session.commitTransaction();
     session.endSession();
-
-    res.status(200).send(created_data);
+    res.status(200).send({
+      data: { ...created_data_array, template_data, user_data },
+      DoneScreens,
+    });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -172,23 +183,31 @@ exports.update_day_wise_count = async (req, res, next) => {
         { user_id: userId, _id: dayId },
         {
           completed_today: newValue ? newValue : foundData.completed_today,
-        }
+        },
+        { new: true }
       );
       // .session(session);
 
-      await user_template_schema.findOneAndUpdate(
+      const template_data = await user_template_schema.findOneAndUpdate(
         { user_id: userId },
         { $inc: { No_of_screens_completed: updatedCount } },
         { new: true }
       );
 
-      await templates_schema.findOneAndUpdate(
+      const user_data = await templates_schema.findOneAndUpdate(
         { _id: templateId },
         { $inc: { No_of_screens_completed: updatedCount }, status: newStat },
         { new: true }
       );
 
-      res.status(200).send({ message: "Updated" });
+      const DoneScreens = await templates_schema.countDocuments({
+        status: "Done",
+      });
+
+      res.status(200).send({
+        data: { ...UpdatedData._doc, user_data, template_data },
+        DoneScreens,
+      });
     } else {
       res.status(400).send({ error: "Only Admin can Update" });
     }
