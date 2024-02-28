@@ -99,6 +99,8 @@ exports.create_day_wise = async (req, res) => {
       { session }
     );
 
+    console.log(created_data_array);
+
     // Update template users
     await templates_schema.updateOne(
       { _id: is_template._id, "users.user_id": { $ne: is_valid_user._id } },
@@ -150,7 +152,11 @@ exports.create_day_wise = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
     res.status(200).send({
-      data: { ...created_data_array, template_data, user_data },
+      data: {
+        created_data: created_data_array[0],
+        template_data,
+        user_data,
+      },
       DoneScreens,
     });
   } catch (error) {
