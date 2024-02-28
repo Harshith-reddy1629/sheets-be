@@ -203,38 +203,67 @@ exports.delete_day_wise_count = async (req, res, next) => {
 };
 
 exports.get_Data = async (req, res, next) => {
-  const { _id } = req.user;
+  const { _id, isAdmin } = req.user;
   var userId = new ObjectId(_id);
   try {
     // const getData = await day_wise_schema.find({ user_id: _id });
-    const getData = await day_wise_schema.aggregate([
-      {
-        $match: { user_id: userId }, // Match documents based on user_id
-      },
-      {
-        $lookup: {
-          from: "user_template_datas",
-          localField: "user_id", // Field from the day_wise_schema collection
-          foreignField: "user_id", // Field from the user_template_schema collection
-          as: "user_data", // Field to store joined data
-        },
-      },
-      {
-        $unwind: "$user_data",
-      },
-      {
-        $lookup: {
-          from: "template_datas",
-          localField: "template_id", // Field from the day_wise_schema collection
-          foreignField: "_id", // Field from the user_template_schema collection
-          as: "template_data", // Field to store joined data
-        },
-      },
-      {
-        $unwind: "$template_data",
-      },
-    ]);
-    res.status(200).send(getData);
+    const getData = isAdmin
+      ? await day_wise_schema.aggregate([
+          {
+            $lookup: {
+              from: "user_template_datas",
+              localField: "user_id", // Field from the day_wise_schema collection
+              foreignField: "user_id", // Field from the user_template_schema collection
+              as: "user_data", // Field to store joined data
+            },
+          },
+          {
+            $unwind: "$user_data",
+          },
+          {
+            $lookup: {
+              from: "template_datas",
+              localField: "template_id", // Field from the day_wise_schema collection
+              foreignField: "_id", // Field from the user_template_schema collection
+              as: "template_data", // Field to store joined data
+            },
+          },
+          {
+            $unwind: "$template_data",
+          },
+        ])
+      : await day_wise_schema.aggregate([
+          {
+            $match: { user_id: userId }, // Match documents based on user_id
+          },
+          {
+            $lookup: {
+              from: "user_template_datas",
+              localField: "user_id", // Field from the day_wise_schema collection
+              foreignField: "user_id", // Field from the user_template_schema collection
+              as: "user_data", // Field to store joined data
+            },
+          },
+          {
+            $unwind: "$user_data",
+          },
+          {
+            $lookup: {
+              from: "template_datas",
+              localField: "template_id", // Field from the day_wise_schema collection
+              foreignField: "_id", // Field from the user_template_schema collection
+              as: "template_data", // Field to store joined data
+            },
+          },
+          {
+            $unwind: "$template_data",
+          },
+        ]);
+
+    const DoneScreens = isAdmin
+      ? await templates_schema.countDocuments({ status: "Done" })
+      : await templates_schema.countDocuments({ user_id: _id, status: "Done" });
+    res.status(200).send({ data: getData, DoneScreens });
   } catch (error) {
     res.status(500).send({ error: "Error" });
   }
