@@ -9,6 +9,7 @@ const jwt = require("jsonwebtoken");
 const Router = express.Router();
 
 const nodemailer = require("nodemailer");
+const create_template = require("../Controllers/template_controllers");
 
 const inputValidation = (request, response, next) => {
   const { username, password, email } = request.body;
@@ -55,13 +56,13 @@ const generateEmail = async (request, response) => {
 const checkMail = async (req, res, next) => {
   const { username, email, password, isAdmin = true } = req.body;
 
-  console.log("Email:", email);
+  // console.log("Email:", email);
 
   const reqExpression1 = /.+@purecodemarketplace\.io$/;
   const reqExpression2 = /.+@purecodesoftware\.com$/;
 
-  console.log("Test result for reqExpression1:", reqExpression1.test(email));
-  console.log("Test result for reqExpression2:", reqExpression2.test(email));
+  // console.log("Test result for reqExpression1:", reqExpression1.test(email));
+  // console.log("Test result for reqExpression2:", reqExpression2.test(email));
   if (reqExpression1.test(email) || reqExpression2.test(email)) {
     next();
   } else {

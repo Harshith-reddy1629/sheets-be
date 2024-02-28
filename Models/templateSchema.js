@@ -8,7 +8,7 @@ const templateSchema = mongoose.Schema(
     },
     completed: {
       type: Number,
-      required: [true, "required"],
+      default: 0,
     },
   },
   {
