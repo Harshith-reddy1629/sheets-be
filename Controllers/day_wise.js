@@ -213,13 +213,13 @@ exports.update_day_wise_count = async (req, res, next) => {
         { new: true }
       );
 
-      const DoneScreens = await templates_schema.countDocuments({
-        status: "Done",
-      });
+      // const DoneScreens = await templates_schema.countDocuments({
+      //   status: "Done",
+      // });
 
       res.status(200).send({
         data: { ...UpdatedData._doc, user_data, template_data },
-        DoneScreens,
+        // DoneScreens,
       });
     } else {
       if (_id === userId) {
