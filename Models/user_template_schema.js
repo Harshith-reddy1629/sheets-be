@@ -19,10 +19,10 @@ const user_template_schema = mongoose.Schema({
   },
   packs: [
     {
+      _id: false,
       pack_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "template_data",
-        unique: true,
+        ref: "template_datas",
       },
       pack_name: {
         type: String,

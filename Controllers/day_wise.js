@@ -12,10 +12,12 @@ const {
 const { ObjectId } = require("mongodb");
 
 exports.isValidUser = async (req, res, next) => {
+  const { isAdmin, username } = req.user;
+
   const { name } = req.body;
   try {
     const is_valid_user = await users_Schema.findOne({
-      username: name,
+      username: isAdmin ? name : username,
     });
     if (!is_valid_user) {
       res.status(400).send({ error: "Invalid Username" });
@@ -65,7 +67,7 @@ exports.create_day_wise = async (req, res) => {
 
     // Find or create user template
     let is_template_user = await user_template_schema
-      .findOne({ user_name: name })
+      .findOne({ user_name: is_valid_user.username })
       .session(session);
     if (!is_template_user) {
       is_template_user = await user_template_schema.create(
@@ -116,8 +118,12 @@ exports.create_day_wise = async (req, res) => {
     );
 
     // Update user template packs
-    await user_template_schema.findOneAndUpdate(
-      { user_id: is_valid_user._id, "packs.pack_id": { $ne: is_template._id } },
+
+    await user_template_schema.updateOne(
+      {
+        user_id: is_valid_user._id,
+        "packs.pack_id": { $ne: is_template._id },
+      },
       {
         $addToSet: {
           packs: {

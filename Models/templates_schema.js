@@ -16,6 +16,7 @@ const template_schema = mongoose.Schema({
   },
   users: [
     {
+      _id: false,
       user_id: { type: mongoose.Schema.Types.ObjectId, ref: "pc_users" },
       user_name: { type: String },
     },
