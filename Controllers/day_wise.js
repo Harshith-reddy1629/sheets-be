@@ -148,10 +148,14 @@ exports.create_day_wise = async (req, res) => {
     );
     // const created_data = created_data_array[0];
     // console.log(created_data_array[0]);
+    // const userObjectId = mongoose.Types.ObjectId(_id);
 
     const DoneScreens = isAdmin
       ? await templates_schema.countDocuments({ status: "Done" })
-      : await templates_schema.countDocuments({ user_id: _id, status: "Done" });
+      : await templates_schema.countDocuments({
+          "users.user_id": is_valid_user._id,
+          status: "Done",
+        });
 
     // let d = created_data[0];
 
@@ -316,7 +320,10 @@ exports.get_Data = async (req, res, next) => {
 
     const DoneScreens = isAdmin
       ? await templates_schema.countDocuments({ status: "Done" })
-      : await templates_schema.countDocuments({ user_id: _id, status: "Done" });
+      : await templates_schema.countDocuments({
+          "users.user_id": _id,
+          status: "Done",
+        });
     res.status(200).send({ data: getData, DoneScreens });
   } catch (error) {
     res.status(500).send({ error: "Error" });
