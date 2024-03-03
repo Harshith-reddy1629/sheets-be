@@ -174,22 +174,19 @@ exports.create_day_wise = async (req, res) => {
 
 exports.update_day_wise_count = async (req, res, next) => {
   const { is_valid_user } = req;
-  const { isAdmin } = req.user;
+  const { isAdmin, _id } = req.user;
   const { userId, dayId, templateId } = req.params;
   const { newValue, newStat } = req.body;
   try {
+    const foundData = await day_wise_schema.findOne({
+      user_id: userId,
+      _id: dayId,
+    });
     if (isAdmin) {
       // const session = await mongoose.startSession();
       // session.startTransaction();
 
-      const foundData = await day_wise_schema.findOne({
-        user_id: userId,
-        _id: dayId,
-      });
-
-      let updatedCount = newValue
-        ? newValue - foundData.completed_today
-        : newValue;
+      let updatedCount = newValue ? newValue - foundData.completed_today : 0;
 
       const UpdatedData = await day_wise_schema.findOneAndUpdate(
         { user_id: userId, _id: dayId },
@@ -200,13 +197,13 @@ exports.update_day_wise_count = async (req, res, next) => {
       );
       // .session(session);
 
-      const template_data = await user_template_schema.findOneAndUpdate(
+      const user_data = await user_template_schema.findOneAndUpdate(
         { user_id: userId },
         { $inc: { No_of_screens_completed: updatedCount } },
         { new: true }
       );
 
-      const user_data = await templates_schema.findOneAndUpdate(
+      const template_data = await templates_schema.findOneAndUpdate(
         { _id: templateId },
         { $inc: { No_of_screens_completed: updatedCount }, status: newStat },
         { new: true }
@@ -221,7 +218,33 @@ exports.update_day_wise_count = async (req, res, next) => {
         DoneScreens,
       });
     } else {
-      res.status(400).send({ error: "Only Admin can Update" });
+      if (_id === userId) {
+        const UpdatedData = await day_wise_schema.findOne({
+          user_id: userId,
+          _id: dayId,
+        });
+
+        const user_data = await user_template_schema.findOne({
+          user_id: userId,
+        });
+
+        const template_data = await templates_schema.findOneAndUpdate(
+          { _id: templateId },
+          { status: newStat },
+          { new: true }
+        );
+
+        const DoneScreens = await templates_schema.countDocuments({
+          status: "Done",
+        });
+
+        res.status(200).send({
+          data: { ...UpdatedData._doc, user_data, template_data },
+          DoneScreens,
+        });
+      } else {
+        res.status(400).send({ error: "Only creator/Admin can Update" });
+      }
     }
   } catch (error) {
     res.status(500).send({ error: "error", message: error.message });
