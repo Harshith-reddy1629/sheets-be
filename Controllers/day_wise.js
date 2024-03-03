@@ -39,7 +39,7 @@ exports.checkDate = async (req, res, next) => {
     const d = new Date().toISOString().slice(0, 10);
 
     let is_day = await day_wise_schema.findOne({
-      user_name: name,
+      user_name: is_valid_user.username,
       template_name,
       date: d,
     }); // check data with same pack on the day
