@@ -12,12 +12,12 @@ const {
 const { ObjectId } = require("mongodb");
 
 exports.isValidUser = async (req, res, next) => {
-  const { isAdmin, username } = req.user;
+  const { is_admin, username } = req.user;
 
   const { name } = req.body;
   try {
     const is_valid_user = await users_Schema.findOne({
-      username: isAdmin ? name : username,
+      username: is_admin ? name : username,
     });
     if (!is_valid_user) {
       res.status(400).send({ error: "Invalid Username" });
@@ -63,7 +63,7 @@ exports.create_day_wise = async (req, res) => {
   try {
     const { name, template_name, completed_today } = req.body;
     const { is_valid_user } = req;
-    const { isAdmin } = req.user;
+    const { is_admin } = req.user;
 
     // Find or create user template
     let is_template_user = await user_template_schema
@@ -150,7 +150,7 @@ exports.create_day_wise = async (req, res) => {
     // console.log(created_data_array[0]);
     // const userObjectId = mongoose.Types.ObjectId(_id);
 
-    const DoneScreens = isAdmin
+    const DoneScreens = is_admin
       ? await templates_schema.countDocuments({ status: "Done" })
       : await templates_schema.countDocuments({
           "users.user_id": is_valid_user._id,
@@ -178,7 +178,7 @@ exports.create_day_wise = async (req, res) => {
 
 exports.update_day_wise_count = async (req, res, next) => {
   const { is_valid_user } = req;
-  const { isAdmin, _id } = req.user;
+  const { is_admin, _id } = req.user;
   const { userId, dayId, templateId } = req.params;
   const { newValue, newStat } = req.body;
   try {
@@ -186,7 +186,7 @@ exports.update_day_wise_count = async (req, res, next) => {
       user_id: userId,
       _id: dayId,
     });
-    if (isAdmin) {
+    if (is_admin) {
       // const session = await mongoose.startSession();
       // session.startTransaction();
 
@@ -262,11 +262,11 @@ exports.delete_day_wise_count = async (req, res, next) => {
 };
 
 exports.get_Data = async (req, res, next) => {
-  const { _id, isAdmin } = req.user;
+  const { _id, is_admin } = req.user;
   var userId = new ObjectId(_id);
   try {
     // const getData = await day_wise_schema.find({ user_id: _id });
-    const getData = isAdmin
+    const getData = is_admin
       ? await day_wise_schema.aggregate([
           {
             $lookup: {
@@ -319,7 +319,7 @@ exports.get_Data = async (req, res, next) => {
           },
         ]);
 
-    const DoneScreens = isAdmin
+    const DoneScreens = is_admin
       ? await templates_schema.countDocuments({ status: "Done" })
       : await templates_schema.countDocuments({
           "users.user_id": _id,

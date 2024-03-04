@@ -3,8 +3,8 @@ const sheet1Schema = require("../Models/sheet1Schema");
 exports.getData = async (req, res) => {
   //   res.send("Get Api");
   try {
-    const { isAdmin, username } = req.user;
-    if (isAdmin) {
+    const { is_admin, username } = req.user;
+    if (is_admin) {
       const getData = await sheet1Schema.find();
       const sortedData = getData.sort(
         (a, b) => new Date(b.date) - new Date(a.date)
@@ -31,19 +31,19 @@ exports.PostData = async (req, res) => {
   try {
     const { packname, totalComponents, inProgress, completed } = req.body;
 
-    const { username, isAdmin, _id } = req.user;
+    const { username, is_admin, _id } = req.user;
 
     const D = new Date().toISOString().slice(0, 10);
     // console.log(D);
 
     if (!username || !packname || !totalComponents || !completed) {
       res.status(400).send({ error: "Invalid data" });
-    } else if (isAdmin && !req.body.username) {
+    } else if (is_admin && !req.body.username) {
       res.status(400).send({ error: "enter name of Editor" });
     } else {
       const checkReq = await sheet1Schema.findOne({
         // _id,
-        name: isAdmin ? req.body.username : username,
+        name: is_admin ? req.body.username : username,
         packName: packname,
         date: D,
       });
@@ -53,7 +53,7 @@ exports.PostData = async (req, res) => {
 
       if (!checkReq) {
         const PostData = await sheet1Schema.create({
-          name: isAdmin ? req.body.username : username,
+          name: is_admin ? req.body.username : username,
           packName: packname,
           totalComponents: totalComponents,
           componentsInProgress: inProgress,
@@ -76,11 +76,11 @@ exports.PostData = async (req, res) => {
 
 exports.updateData = async (req, res) => {
   try {
-    const { isAdmin } = req.user;
+    const { is_admin } = req.user;
 
     const { id } = req.params;
 
-    if (isAdmin) {
+    if (is_admin) {
       const UpdateStatus = await sheet1Schema.updateOne({ _id: id }, req.body);
       res.status(200).send(UpdateStatus);
     } else {
