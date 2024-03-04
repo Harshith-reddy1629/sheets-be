@@ -1,6 +1,6 @@
 const express = require("express");
 
-const userSchema = require("../Models/UserSchema");
+const userSchema = require("../Models/users_Schema");
 
 const bcrypt = require("bcrypt");
 
@@ -54,7 +54,7 @@ const generateEmail = async (request, response) => {
   }
 };
 const checkMail = async (req, res, next) => {
-  const { username, email, password, isAdmin = true } = req.body;
+  const { username, email, password, is_admin = true } = req.body;
 
   // console.log("Email:", email);
 
@@ -78,7 +78,7 @@ Router.post("/", async (req, res) => {
     if (!usercheck) {
       res.status(401).send({ error: "Invalid user" });
     } else {
-      const { username, isAdmin, email, _id, isVerified } = usercheck;
+      const { username, is_admin, email, _id, is_verified } = usercheck;
       //   console.log(usercheck);
 
       const isPasswordMatched = await bcrypt.compare(
@@ -87,8 +87,8 @@ Router.post("/", async (req, res) => {
       );
       //   console.log(isPasswordMatched);
       if (isPasswordMatched) {
-        if (isVerified) {
-          const payload = { username, isAdmin, email, _id };
+        if (is_verified) {
+          const payload = { username, is_admin, email, _id };
           console.log(_id);
           const jwtToken = jwt.sign(payload, process.env.MY_SECRET_TOKEN);
 
@@ -111,7 +111,7 @@ Router.post("/", async (req, res) => {
     async (req, res, next) => {
       const { username, email, password } = req.body;
       const reqExpression2 = /.+@purecodesoftware\.com$/;
-      const isAdmin = reqExpression2.test(email);
+      const is_admin = reqExpression2.test(email);
       try {
         const usercheck = await userSchema.findOne({ username });
         const emailcheck = await userSchema.findOne({ email });
@@ -123,7 +123,7 @@ Router.post("/", async (req, res) => {
             username,
             email,
             password: hashedPassword,
-            isAdmin,
+            is_admin,
           });
           next();
         } else {
@@ -153,14 +153,14 @@ const emailVerification = async (request, response) => {
     if (!UserwithId) {
       response.status(404).send({ errMsg: "Invalid Url" });
     } else {
-      const { isVerified } = UserwithId;
+      const { is_verified } = UserwithId;
 
-      if (isVerified) {
+      if (is_verified) {
         response.status(400).send({ errMsg: "Email already verified" });
       } else {
         const verifyUser = await userSchema.updateOne(
           { _id: id },
-          { isVerified: true }
+          { is_verified: true }
         );
 
         response.status(200).send(verifyUser);
